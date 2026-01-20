@@ -1,0 +1,22 @@
+[
+  {
+    "key": "reminder:47737ad5-c695-45b5-b49d-2c740ccb3dff",
+    "value": "{\"id\":\"47737ad5-c695-45b5-b49d-2c740ccb3dff\",\"text\":\"Call parents tomorrow\",\"dueAt\":null,\"createdAt\":\"2026-01-20T11:10:17.001Z\",\"completed\":false,\"meta\":{}}"
+  },
+  {
+    "key": "reminder:21d30567-d82e-426a-800d-15c04ee76efb",
+    "value": "{\"id\":\"21d30567-d82e-426a-800d-15c04ee76efb\",\"text\":\"Call parents tomorrow\",\"dueAt\":null,\"createdAt\":\"2026-01-20T11:18:33.498Z\",\"completed\":false,\"meta\":{}}"
+  },
+  {
+    "key": "reminder:65806c41-ca67-496d-b2ef-2343ee8a79b6",
+    "value": "{\"id\":\"65806c41-ca67-496d-b2ef-2343ee8a79b6\",\"text\":\"Don't forget to call your parents today, babe! They'd love to hear from you.\",\"dueAt\":null,\"createdAt\":\"2026-01-20T11:19:48.120Z\",\"completed\":false,\"meta\":{}}"
+  },
+  {
+    "key": "reminder:test_next_monday",
+    "value": "Take the test next Monday"
+  },
+  {
+    "key": "reminder:call_parents_today",
+    "value": "Call your parents today"
+  }
+]
