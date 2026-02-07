@@ -1,21 +1,13 @@
 import fs from "fs";
 import path from "path";
 
-const MEMORY_PATH = path.join(process.cwd(), "data/memory.json");
-
 type MemoryItem = {
     key: string;
     value: string;
 };
 
 function readMemory(): MemoryItem[] {
-    if (!fs.existsSync(MEMORY_PATH)) return [];
-    const raw = fs.readFileSync(MEMORY_PATH, "utf-8");
-    return JSON.parse(raw || "[]");
-}
-
-function writeMemory(memories: MemoryItem[]) {
-    fs.writeFileSync(MEMORY_PATH, JSON.stringify(memories, null, 2));
+    return []; // Return an empty array since memory.json is removed
 }
 
 export function store_data(key: string, value: string) {
@@ -28,7 +20,7 @@ export function store_data(key: string, value: string) {
         memories.push({ key, value });
     }
 
-    writeMemory(memories);
+    // writeMemory(memories);
 }
 
 export function get_data(key: string): string | null {
@@ -44,7 +36,7 @@ export function get_recent_memories(limit = 5): string[] {
 export function delete_data(key: string) {
     const memories = readMemory();
     const filtered = memories.filter(m => m.key !== key);
-    writeMemory(filtered);
+    // writeMemory(filtered);
 }
 
 export function deleteLatestReminder() {
@@ -57,5 +49,5 @@ export function deleteLatestReminder() {
 
     const realIndex = memories.length - 1 - idx;
     memories.splice(realIndex, 1);
-    writeMemory(memories);
+    // writeMemory(memories);
 }
