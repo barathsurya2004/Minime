@@ -1,229 +1,158 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { parseAIResponse } from "@/lib/ai/parse"; // assumes you added this
-
-type ChatMessage = {
-  role: "user" | "assistant";
-  content: string;
-};
-
+import { useState, useEffect } from "react";
+import MiniB from "./components/MiniB";
+import ChatDisplay from "./components/ChatDisplay";
+import AnimationDebugPanel from "./components/AnimationDebugPanel";
+import { useChat } from "@/lib/hooks/useChat";
+import { Activity } from "@/lib/ai/activity";
+import { useGlobal } from "./providers";
+import { useAnimalese } from "@/lib/hooks/useAnimalese";
 export default function HomePage() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [started, setStarted] = useState(false);
-  const [activity, setActivity] = useState<string>("idle");
-  const [emotion, setEmotion] = useState<string>("neutral");
+  const [recentMessage, setRecentMessage] = useState<string | null>(null);
+  const { speak, isSpeaking } = useAnimalese("/models/animalese.wav")
+  // Use the actual chat hook
+  const {
+    messages,
+    loading,
+    started,
+    activity,
+    emotion,
+    startInteraction,
+    sendMessage: sendChatMessage,
+  } = useChat();
 
+  const { setActivity } = useGlobal();
+
+  // Update recent message when a new AI message arrives
   useEffect(() => {
-    console.log("Chat Messages:", messages);
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage && lastMessage.role === "assistant") {
+      setRecentMessage(lastMessage.content);
+      speak(lastMessage.content);
 
+      const timeout = setTimeout(() => {
+        // setRecentMessage(null);
+      }, 20000);
+
+      return () => clearTimeout(timeout);
+    }
   }, [messages]);
 
-  async function startInteraction() {
-    if (loading) return;
-
-
-    setLoading(true);
-    setStarted(true);
-
-    try {
-      await fetch("/api/affection/check", { method: "POST" });
-
-      const res = await fetch("/api/ai-models", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message:
-            "Hey. I just opened the app. If there’s anything important I should remember today, remind me. If not, just say something sweet to start the day.",
-          chatHistory: [],
-          inferredMood: "neutral",
-          affectionLevel: 60,
-          interactionGapHours: 8,
-        }),
-      });
-
-      const data = await res.json();
-      console.log("Start Interaction Data:", data);
-      setMessages([
-        { role: "assistant", content: data.message },
-      ]);
-      if (data.state) {
-        setActivity(data.state.activity);
-        setEmotion(data.state.emotion);
-      }
-
-    } catch (err) {
-      console.error(err);
-      setMessages([
-        {
-          role: "assistant",
-          content: "Hey… I’m here. Something glitched but I’ve got you 🫂",
-        },
-      ]);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (isSpeaking) {
+      setActivity(Activity.TALKING)
+    } else {
+      setActivity(Activity.LISTENING)
     }
-  }
+  }, [isSpeaking])
 
-  async function sendMessage() {
-    if (!input.trim() || loading) return;
 
-    const userMessage: ChatMessage = {
-      role: "user",
-      content: input,
-    };
 
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
+  /* ------------------------------ */
+  /* SEND MESSAGE                    */
+  /* ------------------------------ */
+  async function handleSendMessage() {
+    if (!started || !input.trim() || loading) return;
+
+    const userMessage = input.trim();
     setInput("");
-    setLoading(true);
-
-    try {
-      const res = await fetch("/api/ai-models", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: userMessage.content,
-          chatHistory: updatedMessages,
-          inferredMood: "neutral",
-          affectionLevel: 60,
-          interactionGapHours: 1,
-        }),
-      });
-
-      const data = await res.json();
-      setMessages([
-        ...updatedMessages,
-        { role: "assistant", content: data.message },
-      ]);
-      if (data.state) {
-        setActivity(data.state.activity);
-        setEmotion(data.state.emotion);
-      }
-    } catch (err) {
-      console.error(err);
-      setMessages([
-        ...updatedMessages,
-        {
-          role: "assistant",
-          content: "I’m still here. Try again, okay?",
-        },
-      ]);
-    } finally {
-      setLoading(false);
-    }
+    await sendChatMessage(userMessage);
   }
 
+  /* ------------------------------ */
+  /* RENDER                          */
+  /* ------------------------------ */
   return (
-    <main style={{ maxWidth: 600, margin: "40px auto", fontFamily: "sans-serif" }}>
-      <h2>Mini-Barath</h2>
+    <main
+      style={{
+        position: "relative",
+        width: "100vw",
+        height: "100vh",
+        overflow: "hidden",
+      }}
+    >
+      {/* <AnimationDebugPanel /> */}
+      {/* Background 3D */}
+      <MiniB
+        activityState={activity}
+        mood={emotion}
+        currentHour={new Date().getHours()}
+        onInitActivity={setActivity}
+      />
 
-      {!started && (
-        <button
-          onClick={startInteraction}
-          style={{
-            padding: "12px 18px",
-            borderRadius: 8,
-            border: "none",
-            background: "#111",
-            color: "#fff",
-            cursor: "pointer",
+      {/* TOP INPUT BAR */}
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          padding: 12,
+          zIndex: 10,
+          backdropFilter: "blur(6px)",
+          display: "flex",
+          gap: 8,
+        }}
+      >
+        <input
+          value={input}
+          disabled={!started || loading}
+          onChange={(e) => {
+            const value = e.target.value;
+            setInput(value);
+
+            if (!started || loading) return;
+
+            if (value.trim().length > 0) {
+              setActivity(Activity.LISTENING);
+            }
           }}
-        >
-          Tap to check in
-        </button>
-      )}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleSendMessage();
+            }
+          }}
+          placeholder={
+            started ? "Say something…" : "Start the interaction first"
+          }
+          style={{
+            flex: 1,
+            padding: 12,
+            borderRadius: 10,
+            border: "1px solid #070000",
+            fontSize: 22,
+            opacity: started ? 1 : 0.6,
+            color: "#000",
+          }}
+        />
 
-      {started && (
-        <>
-          <div
+        {!started && (
+          <button
+            onClick={() => {
+              startInteraction();
+            }}
             style={{
-              marginBottom: 12,
-              padding: 8,
-              borderRadius: 6,
-              background: "#f3f4f6",
-              fontSize: 14,
+              padding: "0 14px",
+              borderRadius: 10,
+              border: "none",
+              background: "#111",
+              color: "#de0606",
+              fontSize: 22,
+              cursor: "pointer",
             }}
           >
-            <strong>Mini-Barath</strong> is currently{" "}
-            <em>{activity}</em> and feels{" "}
-            <em>{emotion}</em>.
-          </div>
+            Start
+          </button>
+        )}
+      </div>
 
-          <div
-            style={{
-              border: "1px solid #ccc",
-              borderRadius: 8,
-              padding: 12,
-              height: 400,
-              overflowY: "auto",
-              marginBottom: 12,
-              marginTop: 16,
-            }}
-          >
-            {messages.map((msg, i) => (
-              <div
-                key={i}
-                style={{
-                  marginBottom: 8,
-                  textAlign: msg.role === "user" ? "right" : "left",
-                }}
-              >
-                <span
-                  style={{
-                    display: "inline-block",
-                    padding: "6px 10px",
-                    borderRadius: 6,
-                    background:
-                      msg.role === "user" ? "#dbeafe" : "#fce7f3",
-                  }}
-                >
-                  {msg.content}
-                </span>
-              </div>
-            ))}
+      {/* DIALOGUE BOX - Only show when there's a recent message or loading */}
+      <ChatDisplay currentMessage={recentMessage} isLoading={loading} />
 
-            {loading && (
-              <div style={{ fontStyle: "italic", opacity: 0.6 }}>
-                Mini-Barath is typing…
-              </div>
-            )}
-          </div>
-
-          <div style={{ display: "flex", gap: 8 }}>
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") sendMessage();
-              }}
-              placeholder="Say something…"
-              style={{
-                flex: 1,
-                padding: 8,
-                borderRadius: 6,
-                border: "1px solid #ccc",
-              }}
-            />
-            <button
-              onClick={sendMessage}
-              disabled={loading}
-              style={{
-                padding: "8px 14px",
-                borderRadius: 6,
-                border: "none",
-                background: "#111",
-                color: "#fff",
-                cursor: "pointer",
-              }}
-            >
-              Send
-            </button>
-          </div>
-        </>
-      )}
+      {/* DEBUG PANEL - Remove before production */}
     </main>
   );
 }

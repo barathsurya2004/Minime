@@ -18,5 +18,9 @@
   {
     "key": "reminder:call_parents_today",
     "value": "Call your parents today"
+  },
+  {
+    "key": "reminder:tell_parents",
+    "value": "Tell Mini-Barath about your parents"
   }
 ]
