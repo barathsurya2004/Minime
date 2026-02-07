@@ -211,6 +211,19 @@ export const stopSleeping = () => {
 
 export const playTalking = () => {
     playAnimationWithCrossfade(activeActionRef.current || 'idle', 'talking', { fadeDuration: 0.5 })
+
+    const armature = getArmatureOrWarn()
+    if (!armature) return
+
+    gsap.set(armature.position, {
+        x: 1.74,
+        y: 1.05,
+        z: 1.78,
+    })
+
+    gsap.set(armature.rotation, {
+        z: 0.73
+    })
     activeActionRef.current = 'talking'
 }
 
@@ -220,6 +233,17 @@ export const stopTalking = () => {
 
 export const playIdle = () => {
     playAnimationWithCrossfade(activeActionRef.current || 'sleeping', 'happy_idle', { fadeDuration: 0.5 })
+    const armature = getArmatureOrWarn()
+    if (!armature) return
+    gsap.set(armature.position, {
+        x: 1.74,
+        y: 1.05,
+        z: 1.78,
+    })
+
+    gsap.set(armature.rotation, {
+        z: 0.73
+    })
     activeActionRef.current = 'happy_idle'
 }
 
@@ -417,26 +441,32 @@ const getHourInTimeZone = (timeZone: string): number => {
 }
 
 export const get_initial_activity = (): ActivityState => {
-    const timeZone = 'Asia/Kolkata'
-    const currentHour = getHourInTimeZone(timeZone)
+    const subroute = window.location.pathname.split("/")[1];
 
-    let activityState: ActivityState = Activity.SLEEPING
-    let mood: Mood = 'neutral'
-
-    if (currentHour >= 5 && currentHour < 8) {
-        activityState = Activity.GYMMING
-    } else if (currentHour >= 8 && currentHour < 12) {
-        activityState = Activity.WORKING
-        mood = 'sad'
-    } else if (currentHour >= 12 && currentHour < 17) {
-        activityState = Activity.GAMING
-        mood = 'cheerful'
-    } else if (currentHour >= 17 && currentHour < 21) {
-        activityState = Activity.WORKING
-        mood = 'sad'
+    if (subroute === "gift") {
+        return Activity.IDLE;
     }
 
-    return activityState
+    const timeZone = 'Asia/Kolkata';
+    const currentHour = getHourInTimeZone(timeZone);
+
+    let activityState: ActivityState = Activity.SLEEPING;
+    let mood: Mood = 'neutral';
+
+    if (currentHour >= 5 && currentHour < 8) {
+        activityState = Activity.GYMMING;
+    } else if (currentHour >= 8 && currentHour < 12) {
+        activityState = Activity.WORKING;
+        mood = 'sad';
+    } else if (currentHour >= 12 && currentHour < 17) {
+        activityState = Activity.GAMING;
+        mood = 'cheerful';
+    } else if (currentHour >= 17 && currentHour < 21) {
+        activityState = Activity.WORKING;
+        mood = 'sad';
+    }
+
+    return activityState;
 }
 
 export const init_animations = () => {
