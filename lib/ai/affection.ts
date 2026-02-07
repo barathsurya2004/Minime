@@ -1,39 +1,30 @@
-import fs from "fs";
-import path from "path";
+
+
+type AffectionState = {
+    value: number; // 0 to 100
+    lastInteraction: number; // timestamp
+    lastDecayBucket: string | null; // "6h", "1d", "3d", "7d", or null
+};
+
+const DEFAULT_STATE: AffectionState = {
+    value: 50,
+    lastInteraction: Date.now(),
+    lastDecayBucket: null,
+};
 
 /**
  * Affection is a persistent emotional state.
  * It is ONLY mutated via functions in this file.
  */
 
-const AFFECTION_PATH = path.join(process.cwd(), "data/affection.json");
-
-type AffectionState = {
-    value: number;
-    lastInteraction: string;
-    lastDecayBucket: string | null;
-};
-
-const DEFAULT_STATE: AffectionState = {
-    value: 60,
-    lastInteraction: new Date().toISOString(),
-    lastDecayBucket: null,
-};
-
-/* ---------------------------------- */
-/* Internal Helpers (PRIVATE)          */
-/* ---------------------------------- */
+let inMemoryState: AffectionState = { ...DEFAULT_STATE };
 
 function readState(): AffectionState {
-    if (!fs.existsSync(AFFECTION_PATH)) {
-        return DEFAULT_STATE;
-    }
-
-    return JSON.parse(fs.readFileSync(AFFECTION_PATH, "utf-8"));
+    return { ...DEFAULT_STATE }; // Always return the default state
 }
 
 function writeState(state: AffectionState) {
-    fs.writeFileSync(AFFECTION_PATH, JSON.stringify(state, null, 2));
+    // No-op: Do nothing for the dummy system
 }
 
 function clamp(value: number, min = 0, max = 100) {
@@ -50,21 +41,7 @@ function clamp(value: number, min = 0, max = 100) {
  * via meta.affection_delta.
  */
 export function adjustAffection(delta: number): number {
-    if (typeof delta !== "number" || delta === 0) {
-        return getAffection();
-    }
-
-    const state = readState();
-
-    // Safety clamp (AI can never break the system)
-    const safeDelta = clamp(delta, -5, 5);
-
-    state.value = clamp(state.value + safeDelta);
-    state.lastInteraction = new Date().toISOString();
-    state.lastDecayBucket = null; // reset decay on interaction
-
-    writeState(state);
-    return state.value;
+    return DEFAULT_STATE.value; // Always return the default affection value
 }
 
 /**
@@ -75,12 +52,7 @@ export function adjustAffection(delta: number): number {
  * This prevents decay from triggering incorrectly.
  */
 export function registerInteraction() {
-    const state = readState();
-
-    state.lastInteraction = new Date().toISOString();
-    state.lastDecayBucket = null;
-
-    writeState(state);
+    // No-op: Do nothing for the dummy system
 }
 
 /**
@@ -89,25 +61,7 @@ export function registerInteraction() {
  * Applies gentle decay ONLY ONCE per time bucket.
  */
 export function checkAffectionDecay(): number {
-    const state = readState();
-
-    const now = Date.now();
-    const last = new Date(state.lastInteraction).getTime();
-    const hoursSince = (now - last) / (1000 * 60 * 60);
-
-    const bucket = getDecayBucket(hoursSince);
-
-    // No decay needed
-    if (!bucket || bucket === state.lastDecayBucket) {
-        return state.value;
-    }
-
-    const decay = getDecayAmount(bucket);
-    state.value = clamp(state.value + decay);
-    state.lastDecayBucket = bucket;
-
-    writeState(state);
-    return state.value;
+    return DEFAULT_STATE.value; // Always return the default affection value
 }
 
 /**
@@ -115,7 +69,7 @@ export function checkAffectionDecay(): number {
  * Read-only access for AI context.
  */
 export function getAffection(): number {
-    return readState().value;
+    return DEFAULT_STATE.value; // Always return the default affection value
 }
 
 /* ---------------------------------- */
