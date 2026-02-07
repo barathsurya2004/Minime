@@ -23,7 +23,7 @@ const sniglet = Sniglet({
 
 export const metadata: Metadata = {
   title: "MiniB 💕",
-  description: "Its me but aint me",
+  description: "Its me but aint",
 };
 
 export default function RootLayout({
