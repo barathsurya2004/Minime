@@ -14,12 +14,8 @@ export type GlobalContextValue = {
 const GlobalContext = createContext<GlobalContextValue | null>(null);
 
 export function GlobalProvider({ children }: { children: React.ReactNode }) {
-    const [activity, setActivity] = useState<ActivityState>(Activity.IDLE);
+    const [activity, setActivity] = useState<ActivityState>(get_initial_activity());
     const [emotion, setEmotion] = useState<Mood>("neutral");
-    useEffect(() => {
-        setActivity(get_initial_activity());
-    }, [])
-
     const value: GlobalContextValue = {
         activity,
         setActivity,

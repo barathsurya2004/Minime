@@ -63,7 +63,7 @@ export default function ChatDisplay({ currentMessage, isLoading }: ChatDisplayPr
                     </div>
                 )}
             </div>
-            <img src="/dialogue.webp"
+            <img src="/Dialogue.webp"
                 style={{
                     position: "fixed",
                     width: "100%",

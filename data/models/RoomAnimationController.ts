@@ -441,6 +441,11 @@ const getHourInTimeZone = (timeZone: string): number => {
 }
 
 export const get_initial_activity = (): ActivityState => {
+    if (typeof window === "undefined") {
+        console.warn("get_initial_activity called in a non-browser environment");
+        return Activity.IDLE; // Default fallback activity
+    }
+
     const subroute = window.location.pathname.split("/")[1];
 
     if (subroute === "gift") {
@@ -467,7 +472,7 @@ export const get_initial_activity = (): ActivityState => {
     }
 
     return activityState;
-}
+};
 
 export const init_animations = () => {
     const initialActivity = get_initial_activity()
